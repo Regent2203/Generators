@@ -1,0 +1,9 @@
+/[Ll]ibrary/
+/[Pp]ackages/
+/[Oo]bj/
+/[Ll]ogs/
+*.csproj
+*.sln
+*.userprefs
+/.vs
+/[Tt]emp
