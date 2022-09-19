@@ -1,10 +1,11 @@
 using UnityEngine;
+using UnityEditor;
 using UI;
 using DataModel.Resources;
 using DataModel.Generators;
 using DataModel.Generators.Config;
-using UnityEditor;
 using DataModel.Resources.Config;
+using Saver;
 
 public class Services : MonoBehaviour
 {
@@ -23,30 +24,40 @@ public class Services : MonoBehaviour
 
 
     private IResourcesService _resourcesService;
+    private ISaver _saver;
 
 
     private void Awake()
     {
+#if !UNITY_ANDROID
         if (_resourcesConfig == null)
             _resourcesConfig = AssetDatabase.LoadAssetAtPath<ResourcesConfig>(RES_CONFIG_PATH);
 
         if (_generatorsConfig == null)
             _generatorsConfig = AssetDatabase.LoadAssetAtPath<GeneratorsConfig>(GEN_CONFIG_PATH);
+#endif
     }
 
     void Start()
     {
+        InitSaver();
         InitResources();
         InitGenerators();
-        LoadPlayerData();       
+        //_resourcesService.AddResource(1000000, ResourceType.Cash);      
+    }
+
+    private void InitSaver()
+    {
+        _saver = new PlayerPrefsSaver();
     }
 
     private void InitResources()
     {
-        var resourcesConfigFactory = new ResourcesConfigFactory(_resourcesConfig, _uiCanvas.ResourcesView);
+        var resourcesConfigFactory = new ResourcesConfigFactory(_resourcesConfig, _uiCanvas.ResourcesView, _saver);
         var resources = resourcesConfigFactory.CreateFromConfig();
 
         _resourcesService = new ResourcesService(resources);
+        _resourcesService.ResourcesChanged += _saver.SaveResource;
 
         _uiCanvas.ResourcesView.Bind(_resourcesService);
     }
@@ -55,13 +66,7 @@ public class Services : MonoBehaviour
     {
         var generatorsProcessor = this.gameObject.AddComponent<Progressor>();
 
-        var generatorsConfigFactory = new GeneratorsConfigFactory(_generatorsConfig, _uiCanvas.GeneratorsView, generatorsProcessor, _resourcesService);
+        var generatorsConfigFactory = new GeneratorsConfigFactory(_generatorsConfig, _uiCanvas.GeneratorsView, generatorsProcessor, _resourcesService, _saver);
         generatorsConfigFactory.CreateFromConfig();
-    }
-
-    private void LoadPlayerData()
-    {
-        //todo: load player data
-        _resourcesService.AddResource(1000000, ResourceType.Cash);
     }
 }

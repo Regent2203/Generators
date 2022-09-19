@@ -29,11 +29,16 @@ namespace DataModel.Resources
 
         public bool TrySpendResource(float amountRequired, ResourceType type = ResourceType.Cash)
         {
-            if (_resources.TryGetValue(type, out var amountTotal) && (amountTotal >= amountRequired))
+            if (_resources.TryGetValue(type, out var amountTotal))
             {
-                _resources[type] -= amountRequired;
-                ResourcesChanged?.Invoke(type, _resources[type]);
-                return true;
+                if (amountTotal >= amountRequired)
+                {
+                    _resources[type] -= amountRequired;
+                    ResourcesChanged?.Invoke(type, _resources[type]);
+                    return true;
+                }
+                else
+                    return false;
             }
             else
             {

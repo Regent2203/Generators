@@ -14,8 +14,9 @@ namespace DataModel.Generators
     {
         bool IsActive { get; }
         float Delay { get; }
-        void AddProgress(float step);
-        
+        float Progress { get; set; }
+        void AddProgress(float step);        
+
         public event Action<float> ProgressUpdated;
     }
 

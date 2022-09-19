@@ -25,10 +25,10 @@ namespace UI.Views.Items
         public List<Button> BtnsUpgrade => _btnsUpgrade;
 
 
-        public void InitView(string generatorName, int lvl, float income, float lvlupCost)
+        public void InitView(string generatorName, int lvl, float income, float lvlupCost, int progress = 0)
         {
             _txtName.text = generatorName;
-            UpdateProgress(0);
+            UpdateProgress(progress);
             UpdateLabelLevel(lvl);
             UpdateLabelIncome(income);
 

@@ -2,7 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using DataModel.Resources;
-
+using Saver;
 
 namespace DataModel.Generators
 {
@@ -11,6 +11,7 @@ namespace DataModel.Generators
     /// </summary>
     public class ProgressGenerator : IGenerator, IProgressable, IUpgradable
     {
+        private int _index;
         private ResourceType _resourceType; //which resource is produced by generator
         private string _name;
         private int _level;
@@ -18,29 +19,42 @@ namespace DataModel.Generators
         private float _basePrice;
         private float _baseIncome;
         private IList<IUpgrade> _upgrades = new List<IUpgrade>();
+        private ISaver _saver;
 
         public event Action<float, ResourceType> ResourceGenerated;
         public event Action<float> ProgressUpdated;
         public event Action<int> LvlChanged;
         public event Action UpgradesChanged;
 
+        public int Index => _index;
         public ResourceType ResourceType => _resourceType;
-        public int Level => _level;
-        public float Delay => _delay;
+        public int Level => _level;        
         public bool IsActive => _level > 0;
+        public float Delay => _delay;
+        public float Progress { get { return _progress; } set { _progress = value; } }
 
 
-        public ProgressGenerator(string name, int level, float delay, float basePrice, float baseIncome, ResourceType resourceType = ResourceType.Cash)
+        public ProgressGenerator(int index, string name, int level, float progress, float delay, float basePrice, float baseIncome, ISaver saver, ResourceType resourceType = ResourceType.Cash)
         {
+            _index = index;
             _resourceType = resourceType;
             _name = name;
             _level = level;
+            _progress = progress;
             _delay = delay;
             _basePrice = basePrice;
             _baseIncome = baseIncome;
-
-            _progress = 0.0f;
+            _saver = saver;
+            
             _maxProgress = 1.0f;
+
+            LvlChanged += (_) => _saver.SaveGenerator(_index, _level, _progress);
+            ProgressUpdated += (_) => _saver.SaveGenerator(_index, _level, _progress);
+            UpgradesChanged += () =>
+            {
+                foreach (var upgr in _upgrades)
+                    _saver.SaveUpgrade(upgr.Index);
+            };
         }
 
         private void GenerateResource()
@@ -55,7 +69,7 @@ namespace DataModel.Generators
 
             foreach (var upgr in _upgrades)
                 if (upgr is IncomeUpgrade upgrade)
-                totalUpgradeBonus += upgrade.GetIncomeBonus();
+                    totalUpgradeBonus += upgrade.GetIncomeBonus();
 
             return _level * _baseIncome * (1 + totalUpgradeBonus);
         }        
@@ -87,7 +101,7 @@ namespace DataModel.Generators
         public void LevelUp()
         {            
             _level++;
-            LvlChanged?.Invoke(_level);
+            LvlChanged?.Invoke(_level);            
         }
 
         public void LevelDown()

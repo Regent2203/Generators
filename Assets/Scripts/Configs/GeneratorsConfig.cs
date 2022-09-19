@@ -22,6 +22,7 @@ namespace DataModel.Generators.Config
     {
         public string Name;
         public int Level;
+        public float Progress;
         public float Delay;
         public float BasePrice;
         public float BaseIncome;
@@ -35,5 +36,6 @@ namespace DataModel.Generators.Config
         public float UpgradePrice;
         public float IncomeBonus;
         //public float DelayBonus; //should be less than zero
+        public bool IsBought;
     }
 }
